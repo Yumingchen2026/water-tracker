@@ -14,6 +14,9 @@
       --muted: #64748b;
       --border: #e2e8f0;
       --success: #10b981;
+      --warning-bg: #fef3c7;
+      --warning-text: #92400e;
+      --warning-border: #fcd34d;
       --danger: #ef4444;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,9 +35,44 @@
       box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
       border: 1px solid var(--border);
     }
-    header { display: flex; justify-content: space-between; align-items: center; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
     header h1 { font-size: 1.25rem; display: flex; align-items: center; gap: 8px; }
-    .date-badge { font-size: 0.85rem; color: var(--muted); background: var(--primary-light); padding: 4px 10px; border-radius: 99px; }
+
+    /* 日期選擇器與補登提示條 */
+    .date-picker {
+      font-size: 0.85rem;
+      color: var(--primary);
+      background: var(--primary-light);
+      border: 1px solid transparent;
+      padding: 5px 10px;
+      border-radius: 99px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .past-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      border: 1px solid var(--warning-border);
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .past-banner.show { display: flex; }
+    .btn-today {
+      background: #ffffff;
+      color: var(--warning-text);
+      border: 1px solid var(--warning-border);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
 
     /* 進度圓環 */
     .progress-section { display: flex; flex-direction: column; align-items: center; padding: 12px 0; }
@@ -49,10 +87,11 @@
       position: absolute; inset: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center; text-align: center;
     }
+    .ring-status { font-size: 0.78rem; color: var(--muted); }
     .ring-ml { font-size: 1.65rem; font-weight: 700; color: var(--primary); }
-    .ring-goal { font-size: 0.85rem; color: var(--muted); cursor: pointer; text-decoration: underline dotted; }
+    .ring-goal { font-size: 0.82rem; color: var(--muted); cursor: pointer; text-decoration: underline dotted; }
 
-    /* 快速按鈕 */
+    /* 快速按鈕與時間補登列 */
     .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
     button {
       border: none; border-radius: 12px; padding: 10px 12px; font-size: 0.95rem; font-weight: 600;
@@ -63,11 +102,12 @@
     .btn-add span { font-size: 0.75rem; font-weight: 400; color: var(--muted); }
     .custom-row { display: flex; gap: 8px; margin-top: 10px; }
     input, select {
-      border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px;
-      font-size: 0.95rem; font-family: inherit; outline: none;
+      border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px;
+      font-size: 0.9rem; font-family: inherit; outline: none; background: #fff;
     }
     input:focus, select:focus { border-color: var(--primary); }
-    .custom-row input { flex: 1; min-width: 0; }
+    .time-input { width: 108px; color: var(--text); }
+    .custom-row input[type="number"] { flex: 1; min-width: 0; }
     .btn-primary { background: var(--primary); color: #fff; }
     .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); font-size: 0.85rem; padding: 6px 10px; }
 
@@ -81,16 +121,24 @@
     .timer-controls { display: flex; gap: 8px; }
     .timer-controls select { flex: 1; }
 
-    /* 近 7 日長條圖 */
-    .chart { display: flex; align-items: flex-end; justify-content: space-between; height: 110px; gap: 8px; padding-top: 16px; }
-    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
-    .bar-track { width: 100%; max-width: 28px; height: 76px; background: var(--primary-light); border-radius: 8px; display: flex; align-items: flex-end; overflow: hidden; }
+    /* 近 7 日長條圖（支援點擊追溯） */
+    .chart-hint { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .chart { display: flex; align-items: flex-end; justify-content: space-between; height: 118px; gap: 6px; padding-top: 16px; }
+    .bar-col {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      height: 100%; justify-content: flex-end; cursor: pointer; padding: 4px 2px; border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .bar-col:hover { background: #f1f5f9; }
+    .bar-col.selected { background: var(--primary-light); }
+    .bar-track { width: 100%; max-width: 28px; height: 74px; background: #e2e8f0; border-radius: 8px; display: flex; align-items: flex-end; overflow: hidden; }
     .bar-fill { width: 100%; background: var(--primary); border-radius: 8px; transition: height 0.4s ease; }
     .bar-fill.done { background: var(--success); }
     .bar-label { font-size: 0.75rem; color: var(--muted); }
+    .bar-col.selected .bar-label { color: var(--primary); font-weight: 700; }
 
-    /* 今日紀錄列表 */
-    .log-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-top: 10px; }
+    /* 當日紀錄列表 */
+    .log-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; margin-top: 10px; }
     .log-item {
       display: flex; justify-content: space-between; align-items: center;
       padding: 8px 12px; background: #f8fafc; border-radius: 10px; font-size: 0.9rem;
@@ -101,12 +149,17 @@
 </head>
 <body>
   <div class="container">
-    <!-- 標題與今日進度 -->
+    <!-- 標題與日期追溯區 -->
     <div class="card">
       <header>
         <h1>💧 喝水小管家</h1>
-        <span class="date-badge" id="todayLabel"></span>
+        <input type="date" id="datePicker" class="date-picker" title="切換日期查看或補登紀錄" onchange="selectDate(this.value)" />
       </header>
+
+      <div class="past-banner" id="pastBanner">
+        <span id="pastBannerText">📅 歷史補登模式</span>
+        <button class="btn-today" onclick="goToday()">回到今天</button>
+      </div>
 
       <div class="progress-section">
         <div class="ring-wrap">
@@ -115,6 +168,7 @@
             <circle class="ring-fill" id="progressRing" cx="90" cy="90" r="75"></circle>
           </svg>
           <div class="ring-text">
+            <span class="ring-status" id="ringStatus">今日已喝</span>
             <div class="ring-ml" id="currentMl">0 ml</div>
             <div class="ring-goal" id="goalLabel" title="點擊修改每日目標">目標 2000 ml</div>
           </div>
@@ -128,6 +182,7 @@
       </div>
 
       <div class="custom-row">
+        <input type="time" id="logTimeInput" class="time-input" title="設定飲水時間（補登時可自行調整）" />
         <input type="number" id="customInput" placeholder="自訂毫升數 (ml)" min="1" max="3000" />
         <button class="btn-primary" onclick="addCustomWater()">記錄</button>
       </div>
@@ -154,16 +209,19 @@
     <!-- 近 7 日統計 -->
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-weight:700;">📊 近 7 日飲水紀錄</span>
+        <div>
+          <div style="font-weight:700;">📊 近 7 日飲水紀錄</div>
+          <div class="chart-hint">點擊任一長條可切換檢視或補登該日紀錄</div>
+        </div>
         <button class="btn-ghost" onclick="exportCSV()">匯出 CSV</button>
       </div>
       <div class="chart" id="weekChart"></div>
     </div>
 
-    <!-- 今日明細 -->
+    <!-- 當日明細 -->
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-weight:700;">📝 今日明細</span>
+        <span style="font-weight:700;" id="logSectionTitle">📝 今日明細</span>
         <button class="btn-ghost" onclick="undoLast()">復原上一筆</button>
       </div>
       <ul class="log-list" id="logList"></ul>
@@ -175,8 +233,14 @@
     const GOAL_KEY = "water_tracker_goal_v1";
 
     function getTodayKey() {
-      return new Date().toLocaleDateString("en-CA"); // 產生本地 YYYY-MM-DD
+      return new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
     }
+
+    function getCurrentTimeStr() {
+      return new Date().toTimeString().slice(0, 5); // HH:MM
+    }
+
+    let selectedDate = getTodayKey();
 
     function loadData() {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -188,6 +252,18 @@
 
     function getGoal() {
       return Number(localStorage.getItem(GOAL_KEY)) || 2000;
+    }
+
+    function selectDate(dateStr) {
+      if (!dateStr) return;
+      selectedDate = dateStr;
+      render();
+    }
+
+    function goToday() {
+      selectedDate = getTodayKey();
+      document.getElementById("logTimeInput").value = getCurrentTimeStr();
+      render();
     }
 
     // 點擊目標文字可自訂每日飲水目標
@@ -202,14 +278,22 @@
 
     function addWater(amount) {
       const data = loadData();
-      const today = getTodayKey();
-      if (!data[today]) data[today] = [];
-      const now = new Date();
-      const timeStr = now.toTimeString().slice(0, 5);
-      data[today].push({ id: Date.now(), time: timeStr, amount: Number(amount) });
+      const targetDate = selectedDate || getTodayKey();
+      if (!data[targetDate]) data[targetDate] = [];
+
+      const timeInput = document.getElementById("logTimeInput");
+      const timeStr = timeInput.value || getCurrentTimeStr();
+
+      data[targetDate].push({ id: Date.now(), time: timeStr, amount: Number(amount) });
+      // 依時間排序，讓補登的歷史明細也保持時間先後順序
+      data[targetDate].sort((a, b) => a.time.localeCompare(b.time));
+
       saveData(data);
+      if (targetDate === getTodayKey()) {
+        timeInput.value = getCurrentTimeStr();
+        if (timerRunning) resetTimer();
+      }
       render();
-      if (timerRunning) resetTimer(); // 喝水後自動重新計算下次提醒時間
     }
 
     function addCustomWater() {
@@ -223,32 +307,35 @@
 
     function deleteLog(id) {
       const data = loadData();
-      const today = getTodayKey();
-      if (!data[today]) return;
-      data[today] = data[today].filter(item => item.id !== id);
+      if (!data[selectedDate]) return;
+      data[selectedDate] = data[selectedDate].filter(item => item.id !== id);
       saveData(data);
       render();
     }
 
     function undoLast() {
       const data = loadData();
-      const today = getTodayKey();
-      if (data[today] && data[today].length > 0) {
-        data[today].pop();
+      if (data[selectedDate] && data[selectedDate].length > 0) {
+        // 刪除最新建立的那一筆（id 最大者）
+        let maxIdx = 0;
+        data[selectedDate].forEach((item, idx) => {
+          if (item.id > data[selectedDate][maxIdx].id) maxIdx = idx;
+        });
+        data[selectedDate].splice(maxIdx, 1);
         saveData(data);
         render();
       }
     }
 
-    // 柔和提示音效（免外部音檔）
+    // 柔和提示音效
     function playChime() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.15, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
         osc.connect(gain);
@@ -340,26 +427,41 @@
     function render() {
       const data = loadData();
       const today = getTodayKey();
+      const isToday = selectedDate === today;
       const goal = getGoal();
-      const todayLogs = data[today] || [];
-      const total = todayLogs.reduce((sum, item) => sum + item.amount, 0);
+      const dayLogs = data[selectedDate] || [];
+      const total = dayLogs.reduce((sum, item) => sum + item.amount, 0);
 
-      document.getElementById("todayLabel").textContent = today;
+      // 同步日期選擇器與歷史補登提示條
+      const picker = document.getElementById("datePicker");
+      picker.max = today;
+      picker.value = selectedDate;
+
+      const banner = document.getElementById("pastBanner");
+      if (isToday) {
+        banner.classList.remove("show");
+      } else {
+        banner.classList.add("show");
+        document.getElementById("pastBannerText").textContent = `📅 正在追溯／補登：${selectedDate}`;
+      }
+
+      document.getElementById("ringStatus").textContent = isToday ? "今日已喝" : `${selectedDate.slice(5)} 已喝`;
       document.getElementById("currentMl").textContent = `${total} ml`;
       document.getElementById("goalLabel").textContent = `目標 ${goal} ml（點擊修改）`;
+      document.getElementById("logSectionTitle").textContent = isToday ? "📝 今日明細" : `📝 ${selectedDate} 明細`;
 
-      // 更新圓環進度（圓周長 2 * π * 75 ≈ 471）
+      // 更新圓環進度
       const ratio = Math.min(total / goal, 1);
       const ring = document.getElementById("progressRing");
       ring.style.strokeDashoffset = 471 * (1 - ratio);
       ring.style.stroke = total >= goal ? "var(--success)" : "var(--primary)";
 
-      // 更新今日明細
+      // 更新當日明細
       const listEl = document.getElementById("logList");
-      if (todayLogs.length === 0) {
-        listEl.innerHTML = `<li class="empty-tip">今天還沒喝水喔，點擊上方按鈕開始記錄！</li>`;
+      if (dayLogs.length === 0) {
+        listEl.innerHTML = `<li class="empty-tip">${isToday ? "今天還沒喝水喔，點擊上方按鈕開始記錄！" : "這一天沒有喝水紀錄，可直接點擊上方按鈕補登！"}</li>`;
       } else {
-        listEl.innerHTML = [...todayLogs].reverse().map(item => `
+        listEl.innerHTML = [...dayLogs].reverse().map(item => `
           <li class="log-item">
             <span><strong>${item.time}</strong> — 補充了 <strong>${item.amount} ml</strong></span>
             <button class="log-del" onclick="deleteLog(${item.id})">刪除</button>
@@ -367,7 +469,7 @@
         `).join("");
       }
 
-      // 更新近 7 日圖表
+      // 更新近 7 日圖表（支援點擊切換）
       const chartEl = document.getElementById("weekChart");
       const bars = [];
       for (let i = 6; i >= 0; i--) {
@@ -377,8 +479,9 @@
         const dayTotal = (data[key] || []).reduce((s, x) => s + x.amount, 0);
         const pct = Math.min(Math.round((dayTotal / goal) * 100), 100);
         const label = `${d.getMonth() + 1}/${d.getDate()}`;
+        const activeClass = key === selectedDate ? "selected" : "";
         bars.push(`
-          <div class="bar-col" title="${key}: ${dayTotal} ml">
+          <div class="bar-col ${activeClass}" onclick="selectDate('${key}')" title="${key}: ${dayTotal} ml（點擊檢視或補登）">
             <div class="bar-track">
               <div class="bar-fill ${dayTotal >= goal ? 'done' : ''}" style="height:${pct}%"></div>
             </div>
@@ -389,6 +492,7 @@
       chartEl.innerHTML = bars.join("");
     }
 
+    document.getElementById("logTimeInput").value = getCurrentTimeStr();
     resetTimer();
     render();
   </script>
